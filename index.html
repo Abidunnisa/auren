@@ -67,6 +67,8 @@ body::before{
   display:flex;flex-direction:column;gap:5px;
   font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--smoke);
 }
+
+}
 .logo{
   width:clamp(210px,34vw,420px);height:auto;color:var(--bone);display:block;
   opacity:0;transform:translateY(26px);
@@ -244,7 +246,6 @@ footer a:hover{border-color:var(--bone)}
   }
   .go:hover,.go:active{opacity:1;background:var(--bone);color:var(--void)}
   .micro{margin-top:14px}
-}
 </style>
 </head>
 <body>
@@ -359,10 +360,16 @@ footer a:hover{border-color:var(--bone)}
 const CONFIG = {
   dropDate: "2026-09-18T00:00:00+05:30",
 
-  // Paste your Google Apps Script Web App URL here (the one ending in /exec).
-  // Every signup is then written straight into your Google Sheet.
-  // While this is empty the form only shows the success message and sends nothing.
-  endpoint: ""
+  // Paste the Google Apps Script Web App URL here (ends with /exec).
+  // Every signup then appends a row to your own Google Sheet.
+  endpoint: "",
+
+  // Used only while endpoint is empty, so signups aren't lost before setup.
+  whatsapp: "919985462830",
+
+  // true  = testing the page: shows the success message, sends nothing, no WhatsApp.
+  // false = live behaviour. MUST be false before launch, or signups are discarded.
+  testMode: true
 };
 /* ========================================================== */
 
@@ -393,29 +400,38 @@ function joinList(){
   const val   = input.value.trim();
   const num   = phone.value.replace(/\D/g, '');
 
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)){ flag(input); return; }
-  if (num && !/^[6-9]\d{9}$/.test(num)){ flag(phone); return; }
-
-  if (!CONFIG.endpoint){
-    console.warn('AUREN: no endpoint set — nothing was saved.', {email: val, phone: num});
-    done(input, phone);
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)){
+    flag(input);
+    return;
+  }
+  // phone is optional, but if given it must look like an Indian mobile
+  if (num && !/^[6-9]\d{9}$/.test(num)){
+    flag(phone);
     return;
   }
 
-  btn.textContent = 'Sending…';
-  fetch(CONFIG.endpoint, {
-    method: 'POST',
-    mode: 'no-cors',
-    headers: {'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},
-    body: new URLSearchParams({
-      email:  val,
-      phone:  num ? '+91' + num : '',
-      source: 'launch page'
-    })
-  }).finally(() => {
-    btn.textContent = 'Join →';
+  if (CONFIG.endpoint){
+    btn.textContent = 'Sending…';
+    fetch(CONFIG.endpoint, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},
+      body: new URLSearchParams({
+        email:  val,
+        phone:  num ? '+91' + num : '',
+        source: 'launch page'
+      })
+    }).finally(() => {
+      btn.textContent = 'Join →';
+      done(input, phone);
+    });
+  } else if (CONFIG.testMode){
+    console.warn('AUREN: test mode — nothing was sent.', {email: val, phone: num});
     done(input, phone);
-  });
+  } else {
+    window.open('https://wa.me/'+CONFIG.whatsapp+'?text='+encodeURIComponent('AUREN waitlist: '+val+(num ? ' / +91'+num : '')),'_blank');
+    done(input, phone);
+  }
 }
 
 function flag(el){
