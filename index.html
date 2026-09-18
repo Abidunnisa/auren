@@ -362,6 +362,21 @@ footer a:hover{border-color:var(--bone)}
   .step .two{grid-template-columns:1fr}
 }
 
+
+/* ── live banner (replaces the countdown once the drop lands) ── */
+.live{
+  display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;
+  margin-top:clamp(40px,7vh,72px);padding:clamp(22px,4vw,34px) 20px;
+  border:1px solid var(--edge);text-decoration:none;color:var(--bone);
+  background:linear-gradient(160deg,#101010,#070707);
+  transition:border-color .4s,background .4s;
+}
+.live:hover{border-color:#5d574e;background:#121211}
+.live-dot{width:9px;height:9px;border-radius:50%;background:#1faa54;box-shadow:0 0 0 0 rgba(31,170,84,.55);animation:ping 1.9s infinite}
+@keyframes ping{70%{box-shadow:0 0 0 13px rgba(31,170,84,0)}100%{box-shadow:0 0 0 0 rgba(31,170,84,0)}}
+.live b{font-family:'Anton',sans-serif;font-weight:400;font-size:clamp(20px,4.2vw,38px);letter-spacing:.04em;text-transform:uppercase}
+.live em{font-style:normal;font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--smoke)}
+.clock[hidden],.live[hidden]{display:none !important}
 </style>
 </head>
 <body>
@@ -395,12 +410,18 @@ footer a:hover{border-color:var(--bone)}
 
   <div class="strip">
     <div class="rail">
-      <span><b>Drop 01</b> — 18.09.26</span><span>Oversized fit</span><span>All-gender</span><span>M – XXL</span><span>Limited release</span><span>Watch this space</span>
-      <span><b>Drop 01</b> — 18.09.26</span><span>Oversized fit</span><span>All-gender</span><span>M – XXL</span><span>Limited release</span><span>Watch this space</span>
+      <span><b>Drop 01</b> — Out now</span><span>Oversized fit</span><span>All-gender</span><span>M – XXL</span><span>Limited release</span><span><b>Out now</b></span>
+      <span><b>Drop 01</b> — Out now</span><span>Oversized fit</span><span>All-gender</span><span>M – XXL</span><span>Limited release</span><span><b>Out now</b></span>
     </div>
   </div>
 
-  <div class="clock">
+  <a class="live" id="liveBar" href="#shop" hidden>
+    <span class="live-dot"></span>
+    <b>Drop 01 is live</b>
+    <em>Shop now →</em>
+  </a>
+
+  <div class="clock" id="clock">
     <div class="unit"><div class="num" id="d">--</div><div class="lab">Days</div></div>
     <div class="unit"><div class="num" id="h">--</div><div class="lab">Hours</div></div>
     <div class="unit"><div class="num" id="m">--</div><div class="lab">Minutes</div></div>
@@ -422,7 +443,7 @@ footer a:hover{border-color:var(--bone)}
         <button class="go" onclick="joinList()">Join →</button>
       </div>
       <p class="micro">No spam. One message when the drop goes live.</p>
-      <p class="ok" id="ok">You're on the list. See you on 18.09.26.</p>
+      <p class="ok" id="ok">You're on the list. We'll be in touch.</p>
     </div>
   </section>
 
@@ -606,7 +627,7 @@ footer a:hover{border-color:var(--bone)}
       <a href="mailto:aurenfashofficial@gmail.com">aurenfashofficial@gmail.com</a>
       <a href="https://instagram.com/auren_.fashion" target="_blank" rel="noopener">@auren_.fashion</a>
     </div>
-    <div>India · Drop 01 — 18.09.26</div>
+    <div>India · Drop 01 out now</div>
   </footer>
 
 </div>
@@ -631,12 +652,17 @@ const target = new Date(CONFIG.dropDate).getTime();
 function tick(){
   const gap = target - Date.now();
   if (gap <= 0){
-    document.getElementById('d').textContent = '00';
-    document.getElementById('h').textContent = '00';
-    document.getElementById('m').textContent = '00';
-    document.getElementById('s').textContent = '00';
+    // drop has landed: hide the clock, show the live banner
+    const clock = document.getElementById('clock');
+    const live  = document.getElementById('liveBar');
+    if (clock) clock.hidden = true;
+    if (live)  live.hidden = false;
     return;
   }
+  const clock = document.getElementById('clock');
+  const live  = document.getElementById('liveBar');
+  if (clock) clock.hidden = false;
+  if (live)  live.hidden = true;
   const s = Math.floor(gap/1000);
   document.getElementById('d').textContent = pad(Math.floor(s/86400));
   document.getElementById('h').textContent = pad(Math.floor(s%86400/3600));
